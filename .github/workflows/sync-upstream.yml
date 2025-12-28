@@ -1,0 +1,36 @@
+name: Sync Upstream(weekly)
+
+on:
+  schedule:
+    #Каждый понедельник в 03:00 UTC
+    - cron: "0 3 * * 1"
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork(master)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+      - name: Add upstream and fetch
+        run: |
+          git remote add upstream https://github.com/apache/ranger.git
+          git fetch upstream master
+
+      - name: Fast-forward merge upstream/master into master
+        run: |
+          git checkout master
+          git merge --ff-only upstream/master
+
+      - name: Push changes to fork
+        run: |
+          git push origin master
